@@ -5,11 +5,21 @@ const { initializeApp, cert, getApps } = require("firebase-admin/app");
 
 dotenv.config();
 
-if (getApps().length === 0) {
-  const serviceAccount = require("./serviceAccountKey.json");
+function getServiceAccount() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+    try {
+      return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+    } catch {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is not valid JSON");
+    }
+  }
 
+  return require("./serviceAccountKey.json");
+}
+
+if (getApps().length === 0) {
   initializeApp({
-    credential: cert(serviceAccount),
+    credential: cert(getServiceAccount()),
   });
 }
 
@@ -23,7 +33,7 @@ app.use("/", router);
 
 const PORT = process.env.PORT || 8000;
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Feedback backend listening on port ${PORT}`);
 });
 
