@@ -14,6 +14,8 @@ router.get("/health", (req, res) => {
   });
 });
 
+router.get("/api/roster", FeedBackController.proxyRoster);
+
 router.post("/api/feedback", requireIngestSecret, FeedBackController.create);
 router.get("/api/feedback", requireDashboardUser, FeedBackController.list);
 router.patch(

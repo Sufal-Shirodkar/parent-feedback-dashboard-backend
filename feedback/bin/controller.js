@@ -140,6 +140,38 @@ const FeedBackController = {
       });
     }
   },
+
+  async proxyRoster(req, res) {
+    const page = String(req.query.page || "1");
+    const apiKey = process.env.ROSTER_API_KEY || req.query.api_key || "";
+    const target = new URL("https://contourcandidate.web.app/api/roster");
+    target.searchParams.set("page", page);
+
+    if (apiKey) {
+      target.searchParams.set("api_key", apiKey);
+    }
+
+    try {
+      const response = await fetch(target);
+      const payload = await response.json().catch(() => null);
+
+      if (!payload) {
+        return res.status(502).json({
+          status: "error",
+          message: "Unable to load staff roster",
+        });
+      }
+
+      return res.status(response.status).json(payload);
+    } catch (error) {
+      console.error("Failed to load staff roster:", error.message);
+
+      return res.status(502).json({
+        status: "error",
+        message: "Unable to load staff roster",
+      });
+    }
+  },
 };
 
 module.exports = FeedBackController;
