@@ -14,17 +14,19 @@ Express API for a parent feedback dashboard. Incoming feedback is validated, ass
 | `PORT` | no | Defaults to `8000`. Render sets this automatically. |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Render | Full service-account JSON. Locally, `serviceAccountKey.json` is used instead. |
 | `FEEDBACK_INGEST_SECRET` | yes | Shared secret for `POST /api/feedback`. Apps Script must send it as `X-Feedback-Secret`. |
+| `CONTOUR_ROSTER_API_KEY` | yes for roster | Server-only Contour roster key. Never send this to the frontend. |
 
 Local `.env` example:
 
 ```bash
 PORT=8000
 FEEDBACK_INGEST_SECRET=replace-with-a-long-random-string
+CONTOUR_ROSTER_API_KEY=replace-with-the-contour-roster-key
 ```
 
 Do not commit `.env` or `serviceAccountKey.json`.
 
-On Render, set `FIREBASE_SERVICE_ACCOUNT_JSON` and `FEEDBACK_INGEST_SECRET` as secret environment variables.
+On Render, set `FIREBASE_SERVICE_ACCOUNT_JSON`, `FEEDBACK_INGEST_SECRET`, and `CONTOUR_ROSTER_API_KEY` as secret environment variables.
 
 ## Setup
 
@@ -126,6 +128,28 @@ Priority is calculated only on the server. Client-sent priority fields are ignor
 }
 ```
 
+### `GET /api/roster`
+
+No auth. Used by the hosted dashboard to resolve a signed-in user's staff name, role, and classes.
+
+The handler fetches every Contour roster page server-side, caches the combined staff list for 10 minutes (about 18 Contour calls/hour, under the 60/hour limit), and never accepts `api_key` from the client.
+
+```json
+{
+  "status": "ok",
+  "staff": [
+    {
+      "name": "Marcus Chen",
+      "email": "marcus.chen@contoureducation.example",
+      "role": "lead",
+      "classes": []
+    }
+  ]
+}
+```
+
+401 means the server key is rejected. 429 means Contour rate-limited the backend and no cached roster is available. If a cache exists, a 429 is not returned — the last good staff list is reused.
+
 ### `GET /api/feedback`
 
 Returns feedback newest first. Access is enforced on the server, then the visible list is paginated.
@@ -203,4 +227,4 @@ Store `FEEDBACK_INGEST_SECRET` in Apps Script **Project Settings → Script prop
 ## Notes
 
 - `.env` and `serviceAccountKey.json` are gitignored.
-- Roster API and Firebase Auth are not implemented yet. Dashboard routes trust identity headers that a future auth layer will set after verifying the user.
+- Dashboard routes trust identity headers. The hosted app loads those values from `GET /api/roster` after Firebase sign-in.

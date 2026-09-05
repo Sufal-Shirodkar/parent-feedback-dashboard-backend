@@ -8,6 +8,7 @@ const {
   markFeedbackHandled,
 } = require("../lib/model");
 const { getWeeklyDigest } = require("../lib/digest");
+const { getCachedRoster, RosterError } = require("../lib/roster");
 
 const FeedBackController = {
   async create(req, res) {
@@ -141,30 +142,23 @@ const FeedBackController = {
     }
   },
 
-  async proxyRoster(req, res) {
-    const page = String(req.query.page || "1");
-    const apiKey = process.env.ROSTER_API_KEY || req.query.api_key || "";
-    const target = new URL("https://contourcandidate.web.app/api/roster");
-    target.searchParams.set("page", page);
-
-    if (apiKey) {
-      target.searchParams.set("api_key", apiKey);
-    }
-
+  async listRoster(req, res) {
     try {
-      const response = await fetch(target);
-      const payload = await response.json().catch(() => null);
+      const result = await getCachedRoster();
 
-      if (!payload) {
-        return res.status(502).json({
-          status: "error",
-          message: "Unable to load staff roster",
-        });
-      }
-
-      return res.status(response.status).json(payload);
+      return res.status(200).json({
+        status: "ok",
+        staff: result.staff,
+      });
     } catch (error) {
       console.error("Failed to load staff roster:", error.message);
+
+      if (error instanceof RosterError) {
+        return res.status(error.status).json({
+          status: "error",
+          message: error.message,
+        });
+      }
 
       return res.status(502).json({
         status: "error",
