@@ -128,7 +128,20 @@ Priority is calculated only on the server. Client-sent priority fields are ignor
 
 ### `GET /api/feedback`
 
-Returns feedback newest first. Access is enforced on the server.
+Returns feedback newest first. Access is enforced on the server, then the visible list is paginated.
+
+**Query**
+
+| Param | Default | Notes |
+| --- | --- | --- |
+| `page` | `1` | 1-based page number |
+| `limit` | `10` | Page size, max `100` |
+
+```text
+GET /api/feedback?page=1&limit=10
+```
+
+Response includes `pagination: { page, limit, total, totalPages }`. Pagination runs after role filtering, so a tutor's `total` is only their assigned classes.
 
 **Identity headers** (stand-in until Contour roster/auth is wired)
 

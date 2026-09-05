@@ -1,5 +1,6 @@
 const { validateFeedback } = require("../helpers/validator");
 const { canAccessFeedback, redactFeedbackForUser } = require("../helpers/access");
+const { parsePagination, paginateItems } = require("../helpers/pagination");
 const {
   createFeedback,
   listFeedback,
@@ -47,14 +48,25 @@ const FeedBackController = {
 
   async list(req, res) {
     try {
+      const paginationQuery = parsePagination(req.query);
+
+      if (paginationQuery.error) {
+        return res.status(400).json({
+          status: "error",
+          message: paginationQuery.error,
+        });
+      }
+
       const feedback = await listFeedback();
       const visible = feedback
         .filter((item) => canAccessFeedback(req.user, item))
         .map((item) => redactFeedbackForUser(req.user, item));
+      const { items, pagination } = paginateItems(visible, paginationQuery.value);
 
       return res.status(200).json({
         status: "ok",
-        feedback: visible,
+        feedback: items,
+        pagination,
       });
     } catch (error) {
       console.error("Failed to list feedback:", error);
