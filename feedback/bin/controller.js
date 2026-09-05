@@ -6,6 +6,7 @@ const {
   getFeedbackById,
   markFeedbackHandled,
 } = require("../lib/model");
+const { getWeeklyDigest } = require("../lib/digest");
 
 const FeedBackController = {
   async create(req, res) {
@@ -99,6 +100,31 @@ const FeedBackController = {
       return res.status(500).json({
         status: "error",
         message: "Failed to mark feedback as handled",
+      });
+    }
+  },
+
+  async weeklyDigest(req, res) {
+    try {
+      const result = await getWeeklyDigest(req.user);
+
+      return res.status(200).json({
+        status: "ok",
+        ...result,
+      });
+    } catch (error) {
+      console.error("Failed to generate weekly digest:", error.message);
+
+      if (error.code === "GEMINI_NOT_CONFIGURED") {
+        return res.status(503).json({
+          status: "error",
+          message: "Weekly digest is not configured",
+        });
+      }
+
+      return res.status(502).json({
+        status: "error",
+        message: "Failed to generate weekly digest",
       });
     }
   },

@@ -21,5 +21,10 @@ router.patch(
   requireDashboardUser,
   FeedBackController.markHandled
 );
+router.get(
+  "/api/ai/weekly-digest",
+  requireDashboardUser,
+  FeedBackController.weeklyDigest
+);
 
 module.exports = router;
