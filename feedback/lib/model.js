@@ -122,18 +122,36 @@ async function createFeedback(input) {
   }
 }
 
+function applyCurrentPriority(data) {
+  const rating = Number(data.rating);
+  const continuing = data.continuing ?? null;
+  const contactRequested = toContactRequested(data.contactRequested);
+  const priorityScore = calculatePriorityScore({
+    rating,
+    continuing,
+    contactRequested,
+  });
+
+  return {
+    ...data,
+    priorityScore,
+    priority: getPriorityLabel(priorityScore),
+  };
+}
+
 function serializeFeedback(doc) {
   const data = doc.data();
-  const createdAt = data.createdAt && typeof data.createdAt.toDate === "function"
-    ? data.createdAt.toDate().toISOString()
-    : data.createdAt || null;
-  const handledAt = data.handledAt && typeof data.handledAt.toDate === "function"
-    ? data.handledAt.toDate().toISOString()
-    : data.handledAt || null;
+  const withPriority = applyCurrentPriority(data);
+  const createdAt = withPriority.createdAt && typeof withPriority.createdAt.toDate === "function"
+    ? withPriority.createdAt.toDate().toISOString()
+    : withPriority.createdAt || null;
+  const handledAt = withPriority.handledAt && typeof withPriority.handledAt.toDate === "function"
+    ? withPriority.handledAt.toDate().toISOString()
+    : withPriority.handledAt || null;
 
   return {
     id: doc.id,
-    ...data,
+    ...withPriority,
     createdAt,
     handledAt,
   };
@@ -186,4 +204,5 @@ module.exports = {
   markFeedbackHandled,
   calculatePriorityScore,
   getPriorityLabel,
+  applyCurrentPriority,
 };
