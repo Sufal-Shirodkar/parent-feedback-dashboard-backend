@@ -15,6 +15,7 @@ function validateFeedback(body = {}) {
         continuing: value.continuing,
         contact_request: value.contact_request,
         comments: value.comments,
+        source_id: value.source_id,
       },
     };
   }
@@ -39,7 +40,7 @@ function validateFeedback(body = {}) {
 
   if (ratingError) {
     return {
-      error: "rating must be a number",
+      error: "rating must be a number from 1 to 5",
     };
   }
 

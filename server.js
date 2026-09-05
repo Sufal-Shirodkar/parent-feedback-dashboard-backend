@@ -31,6 +31,13 @@ app.use(cors());
 app.use(express.json());
 app.use("/", router);
 
+app.use((req, res) => {
+  res.status(404).json({
+    status: "error",
+    message: "Not found",
+  });
+});
+
 const PORT = process.env.PORT || 8000;
 
 const server = app.listen(PORT, "0.0.0.0", () => {

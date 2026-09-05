@@ -1,5 +1,9 @@
 const { Router } = require("express");
 const FeedBackController = require("../feedback/bin/controller");
+const {
+  requireIngestSecret,
+  requireDashboardUser,
+} = require("../feedback/helpers/access");
 
 const router = Router();
 
@@ -10,6 +14,12 @@ router.get("/health", (req, res) => {
   });
 });
 
-router.post("/api/feedback", FeedBackController.create);
+router.post("/api/feedback", requireIngestSecret, FeedBackController.create);
+router.get("/api/feedback", requireDashboardUser, FeedBackController.list);
+router.patch(
+  "/api/feedback/:id/handled",
+  requireDashboardUser,
+  FeedBackController.markHandled
+);
 
 module.exports = router;
